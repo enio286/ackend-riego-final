@@ -36,8 +36,8 @@ from .api_views import (
     auditorias_api,
     auditoria_detail_api,
 )
-
 from .auth_api_views import auth_ping_api, auth_me_api
+from .auth_admin_api_views import access_roles_api, access_users_api, access_user_detail_api
 from .auth_admin_api_views import (
     access_roles_api,
     access_role_detail_api,
@@ -159,10 +159,10 @@ urlpatterns = [
     # admin
     # =========================================================
 
+path('auth/ping/', auth_ping_api, name='api_auth_ping'),
+path('auth/me/', auth_me_api, name='api_auth_me'),
 
-    path('access-roles/', access_roles_api, name='api_access_roles'),
-    path('access-roles/<int:role_id>/', access_role_detail_api, name='api_access_role_detail'),
+path('access-roles/', access_roles_api, name='api_access_roles'),
 
-    path('access-users/', access_users_api, name='api_access_users'),
-    path('access-users/<int:user_id>/', access_user_detail_api, name='api_access_user_detail'),
-]
+path('access-users/', access_users_api, name='api_access_users'),
+path('access-users/<int:user_id>/', access_user_detail_api, name='api_access_user_detail'),

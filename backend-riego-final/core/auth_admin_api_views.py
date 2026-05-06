@@ -6,6 +6,13 @@ from rest_framework.permissions import BasePermission
 from rest_framework.response import Response
 
 
+FIXED_ROLES = {
+    "ADMIN": "Acceso total al sistema y administración completa.",
+    "OPERADOR": "Acceso operativo a módulos del sistema.",
+    "VISOR": "Acceso de solo lectura al dashboard.",
+}
+
+
 class IsAccessAdmin(BasePermission):
     def has_permission(self, request, view):
         user = request.user
@@ -15,13 +22,37 @@ class IsAccessAdmin(BasePermission):
         if user.is_superuser or user.is_staff:
             return True
 
-        return user.groups.filter(name="ADMIN").exists()
+        return user.groups.filter(name__iexact="ADMIN").exists()
+
+
+def ensure_fixed_roles():
+    for role_name in FIXED_ROLES.keys():
+        Group.objects.get_or_create(name=role_name)
+
+
+def normalize_roles(user):
+    raw_roles = list(user.groups.values_list("name", flat=True))
+    return [role.upper() for role in raw_roles]
+
+
+def get_primary_role(user):
+    roles = normalize_roles(user)
+
+    if user.is_superuser or user.is_staff:
+        return "ADMIN"
+
+    for role in FIXED_ROLES.keys():
+        if role in roles:
+            return role
+
+    return None
 
 
 def group_to_dict(group):
     return {
         "id": group.id,
-        "name": group.name,
+        "name": group.name.upper(),
+        "description": FIXED_ROLES.get(group.name.upper(), ""),
     }
 
 
@@ -35,96 +66,40 @@ def user_to_dict(user):
         "is_active": user.is_active,
         "is_staff": user.is_staff,
         "is_superuser": user.is_superuser,
-        "roles": list(user.groups.values_list("name", flat=True)),
+        "roles": normalize_roles(user),
+        "primary_role": get_primary_role(user),
     }
 
 
-def get_groups_from_names(role_names):
-    if not isinstance(role_names, list):
-        return None, "role_names debe ser una lista"
+def get_group_from_role_name(role_name):
+    ensure_fixed_roles()
 
-    clean_names = [str(name).strip().upper() for name in role_names if str(name).strip()]
-    groups = list(Group.objects.filter(name__in=clean_names))
+    role_name = str(role_name).strip().upper()
+    if role_name not in FIXED_ROLES:
+        return None, f"Rol inválido. Usa uno de estos: {', '.join(FIXED_ROLES.keys())}"
 
-    found_names = {group.name for group in groups}
-    missing = [name for name in clean_names if name not in found_names]
+    try:
+        group = Group.objects.get(name=role_name)
+    except Group.DoesNotExist:
+        return None, f"No existe el rol {role_name}"
 
-    if missing:
-        return None, f"No existen estos roles: {', '.join(missing)}"
-
-    return groups, None
+    return group, None
 
 
-@api_view(['GET', 'POST'])
+@api_view(['GET'])
 @permission_classes([IsAccessAdmin])
 def access_roles_api(request):
-    if request.method == 'GET':
-        roles = Group.objects.all().order_by("name")
-        data = [group_to_dict(role) for role in roles]
-        return Response(data, status=status.HTTP_200_OK)
-
-    name = str(request.data.get("name", "")).strip().upper()
-
-    if not name:
-        return Response(
-            {"error": "El nombre del rol es obligatorio"},
-            status=status.HTTP_400_BAD_REQUEST
-        )
-
-    if Group.objects.filter(name=name).exists():
-        return Response(
-            {"error": "Ya existe un rol con ese nombre"},
-            status=status.HTTP_400_BAD_REQUEST
-        )
-
-    role = Group.objects.create(name=name)
-    return Response(group_to_dict(role), status=status.HTTP_201_CREATED)
-
-
-@api_view(['GET', 'PUT', 'DELETE'])
-@permission_classes([IsAccessAdmin])
-def access_role_detail_api(request, role_id):
-    try:
-        role = Group.objects.get(id=role_id)
-    except Group.DoesNotExist:
-        return Response(
-            {"error": "Rol no encontrado"},
-            status=status.HTTP_404_NOT_FOUND
-        )
-
-    if request.method == 'GET':
-        return Response(group_to_dict(role), status=status.HTTP_200_OK)
-
-    if request.method == 'PUT':
-        name = str(request.data.get("name", role.name)).strip().upper()
-
-        if not name:
-            return Response(
-                {"error": "El nombre del rol es obligatorio"},
-                status=status.HTTP_400_BAD_REQUEST
-            )
-
-        exists = Group.objects.filter(name=name).exclude(id=role.id).exists()
-        if exists:
-            return Response(
-                {"error": "Ya existe otro rol con ese nombre"},
-                status=status.HTTP_400_BAD_REQUEST
-            )
-
-        role.name = name
-        role.save()
-        return Response(group_to_dict(role), status=status.HTTP_200_OK)
-
-    role.delete()
-    return Response(
-        {"message": "Rol eliminado correctamente"},
-        status=status.HTTP_200_OK
-    )
+    ensure_fixed_roles()
+    roles = Group.objects.filter(name__in=FIXED_ROLES.keys()).order_by("name")
+    data = [group_to_dict(role) for role in roles]
+    return Response(data, status=status.HTTP_200_OK)
 
 
 @api_view(['GET', 'POST'])
 @permission_classes([IsAccessAdmin])
 def access_users_api(request):
+    ensure_fixed_roles()
+
     if request.method == 'GET':
         users = User.objects.all().order_by("id")
         data = [user_to_dict(user) for user in users]
@@ -136,7 +111,7 @@ def access_users_api(request):
     last_name = str(request.data.get("last_name", "")).strip()
     password = str(request.data.get("password", "")).strip()
     is_active = request.data.get("is_active", True)
-    role_names = request.data.get("role_names", [])
+    role_name = str(request.data.get("role_name", "")).strip().upper()
 
     if not username:
         return Response(
@@ -147,6 +122,12 @@ def access_users_api(request):
     if not password:
         return Response(
             {"error": "La contraseña es obligatoria"},
+            status=status.HTTP_400_BAD_REQUEST
+        )
+
+    if not role_name:
+        return Response(
+            {"error": "El rol es obligatorio"},
             status=status.HTTP_400_BAD_REQUEST
         )
 
@@ -162,12 +143,11 @@ def access_users_api(request):
             status=status.HTTP_400_BAD_REQUEST
         )
 
-    groups, error = get_groups_from_names(role_names)
+    group, error = get_group_from_role_name(role_name)
     if error:
         return Response({"error": error}, status=status.HTTP_400_BAD_REQUEST)
 
-    role_names_upper = [group.name for group in groups]
-    is_staff = "ADMIN" in role_names_upper
+    is_staff = role_name == "ADMIN"
 
     user = User.objects.create_user(
         username=username,
@@ -179,13 +159,16 @@ def access_users_api(request):
         is_staff=is_staff,
     )
 
-    user.groups.set(groups)
+    user.groups.set([group])
+
     return Response(user_to_dict(user), status=status.HTTP_201_CREATED)
 
 
 @api_view(['GET', 'PUT', 'DELETE'])
 @permission_classes([IsAccessAdmin])
 def access_user_detail_api(request, user_id):
+    ensure_fixed_roles()
+
     try:
         user = User.objects.get(id=user_id)
     except User.DoesNotExist:
@@ -204,11 +187,19 @@ def access_user_detail_api(request, user_id):
         last_name = str(request.data.get("last_name", user.last_name)).strip()
         password = str(request.data.get("password", "")).strip()
         is_active = request.data.get("is_active", user.is_active)
-        role_names = request.data.get("role_names", list(user.groups.values_list("name", flat=True)))
+        role_name = str(
+            request.data.get("role_name", get_primary_role(user) or "")
+        ).strip().upper()
 
         if not username:
             return Response(
                 {"error": "El username es obligatorio"},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        if not role_name:
+            return Response(
+                {"error": "El rol es obligatorio"},
                 status=status.HTTP_400_BAD_REQUEST
             )
 
@@ -227,25 +218,22 @@ def access_user_detail_api(request, user_id):
                     status=status.HTTP_400_BAD_REQUEST
                 )
 
-        groups, error = get_groups_from_names(role_names)
+        group, error = get_group_from_role_name(role_name)
         if error:
             return Response({"error": error}, status=status.HTTP_400_BAD_REQUEST)
-
-        role_names_upper = [group.name for group in groups]
-        is_staff = "ADMIN" in role_names_upper
 
         user.username = username
         user.email = email or ""
         user.first_name = first_name
         user.last_name = last_name
         user.is_active = bool(is_active)
-        user.is_staff = is_staff
+        user.is_staff = role_name == "ADMIN"
 
         if password:
             user.set_password(password)
 
         user.save()
-        user.groups.set(groups)
+        user.groups.set([group])
 
         return Response(user_to_dict(user), status=status.HTTP_200_OK)
 
