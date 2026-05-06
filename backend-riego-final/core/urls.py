@@ -155,6 +155,11 @@ urlpatterns = [
     path('auditorias/', auditorias_api, name='api_auditorias'),
     path('auditorias/<int:id_auditoria>/', auditoria_detail_api, name='api_auditoria_detail'),
 
+   # =========================================================
+    # admin
+    # =========================================================
+
+
     path('access-roles/', access_roles_api, name='api_access_roles'),
     path('access-roles/<int:role_id>/', access_role_detail_api, name='api_access_role_detail'),
 
