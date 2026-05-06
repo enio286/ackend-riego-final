@@ -38,12 +38,6 @@ from .api_views import (
 )
 from .auth_api_views import auth_ping_api, auth_me_api
 from .auth_admin_api_views import access_roles_api, access_users_api, access_user_detail_api
-from .auth_admin_api_views import (
-    access_roles_api,
-    access_role_detail_api,
-    access_users_api,
-    access_user_detail_api,
-)
 
 
 urlpatterns = [
