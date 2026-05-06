@@ -31,6 +31,20 @@ from .models import (
 # =========================================================
 # PERMISOS
 # =========================================================
+class AllowAnyReadAdminWrite(BasePermission):
+    def has_permission(self, request, view):
+        if request.method in SAFE_METHODS:
+            return True
+
+        return (
+            request.user
+            and request.user.is_authenticated
+            and (request.user.is_staff or request.user.is_superuser)
+        )
+
+
+
+
 
 class IsAuthenticatedReadAdminWrite(BasePermission):
     def has_permission(self, request, view):
