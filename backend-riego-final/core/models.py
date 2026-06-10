@@ -619,3 +619,28 @@ class AuditoriaSistema(models.Model):
 
     def __str__(self):
         return f"{self.accion} - {self.fecha_hora}"
+
+
+ # =========================================================
+# esp
+# =========================================================
+
+
+class TelemetriaESP32(models.Model):
+    dispositivo_codigo = models.CharField(max_length=100, default="esp32-01")
+    humedad_suelo = models.FloatField(null=True, blank=True)
+    temperatura_ambiente = models.FloatField(null=True, blank=True)
+    humedad_ambiente = models.FloatField(null=True, blank=True)
+    distancia_cm = models.FloatField(null=True, blank=True)
+    nivel_tanque_pct = models.FloatField(null=True, blank=True)
+    bomba_activa = models.BooleanField(default=False)
+    modo = models.CharField(max_length=20, default="AUTO")
+    payload_raw = models.JSONField(default=dict, blank=True)
+    fecha_hora = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        db_table = "telemetria_esp32"
+        ordering = ["-fecha_hora"]
+
+    def __str__(self):
+        return f"{self.dispositivo_codigo} - {self.fecha_hora}"

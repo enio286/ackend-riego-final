@@ -1,4 +1,5 @@
 from django.urls import path
+from .mqtt_api_views import telemetria_latest_api, enviar_comando_mqtt_api
 
 from .api_views import (
     predios_api,
@@ -116,4 +117,10 @@ urlpatterns = [
     # AUDITORIA
     path("auditorias/", auditorias_api, name="api_auditorias"),
     path("auditorias/<int:id_auditoria>/", auditoria_detail_api, name="api_auditoria_detail"),
+
+    # mtqq
+    path("iot/telemetria/latest/", telemetria_latest_api, name="api_iot_telemetria_latest"),
+    path("iot/comando/", enviar_comando_mqtt_api, name="api_iot_comando"),
+
+
 ]

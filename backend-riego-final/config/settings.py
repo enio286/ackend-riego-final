@@ -160,3 +160,21 @@ CORS_ALLOW_HEADERS = [
     "x-csrftoken",
     "x-requested-with",
 ]
+
+
+import os
+
+MQTT_BROKER_HOST = os.getenv("MQTT_BROKER_HOST", "test.mosquitto.org")
+MQTT_BROKER_PORT = int(os.getenv("MQTT_BROKER_PORT", "1883"))
+MQTT_USERNAME = os.getenv("MQTT_USERNAME", "")
+MQTT_PASSWORD = os.getenv("MQTT_PASSWORD", "")
+
+MQTT_TOPIC_TELEMETRIA = os.getenv(
+    "MQTT_TOPIC_TELEMETRIA",
+    "riego/esp32-01/telemetria"
+)
+
+MQTT_TOPIC_COMANDO = os.getenv(
+    "MQTT_TOPIC_COMANDO",
+    "riego/esp32-01/comando"
+)
