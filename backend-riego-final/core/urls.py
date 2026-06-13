@@ -1,5 +1,6 @@
 from django.urls import path
 from .mqtt_api_views import telemetria_latest_api, enviar_comando_mqtt_api
+from .auth_password_reset_api_views import forgot_password_api, reset_password_api
 
 from .api_views import (
     predios_api,
@@ -121,6 +122,11 @@ urlpatterns = [
     # mtqq
     path("iot/telemetria/latest/", telemetria_latest_api, name="api_iot_telemetria_latest"),
     path("iot/comando/", enviar_comando_mqtt_api, name="api_iot_comando"),
+
+    #contraseña olvido
+
+    path("auth/forgot-password/", forgot_password_api, name="api_auth_forgot_password"),
+    path("auth/reset-password/", reset_password_api, name="api_auth_reset_password"),
 
 
 ]
