@@ -2,6 +2,7 @@ from django.urls import path
 from .mqtt_api_views import telemetria_latest_api, enviar_comando_mqtt_api
 from .auth_password_reset_api_views import forgot_password_api, reset_password_api
 
+
 from .api_views import (
     predios_api,
     predio_detail_api,

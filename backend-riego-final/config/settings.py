@@ -41,6 +41,7 @@ INSTALLED_APPS = [
     'rest_framework',
     'rest_framework_simplejwt',
     'corsheaders',
+    'anymail',
 ]
 
 MIDDLEWARE = [
@@ -183,11 +184,6 @@ MQTT_TOPIC_COMANDO = os.getenv(
 import os
 
 FRONTEND_URL = os.getenv("FRONTEND_URL", "http://localhost:5173")
-
-INSTALLED_APPS = [
-    # ...
-    "anymail",
-]
 
 EMAIL_BACKEND = "anymail.backends.resend.EmailBackend"
 ANYMAIL = {
