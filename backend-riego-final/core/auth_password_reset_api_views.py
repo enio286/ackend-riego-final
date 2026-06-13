@@ -18,7 +18,6 @@ token_generator = PasswordResetTokenGenerator()
 def forgot_password_api(request):
     email = str(request.data.get("email", "")).strip().lower()
 
-    # Respuesta neutra por seguridad
     success_message = {
         "message": "Si el correo existe, se enviará un enlace de recuperación."
     }
@@ -36,6 +35,10 @@ def forgot_password_api(request):
 
     reset_link = f"{settings.FRONTEND_URL.rstrip('/')}/reset-password/{uid}/{token}"
     print("RESET LINK LIMPIO:", reset_link)
+    print("EMAIL_HOST:", settings.EMAIL_HOST)
+    print("EMAIL_PORT:", settings.EMAIL_PORT)
+    print("EMAIL_HOST_USER:", settings.EMAIL_HOST_USER)
+    print("FRONTEND_URL:", settings.FRONTEND_URL)
 
     subject = "Recuperación de contraseña"
     message = (
@@ -47,19 +50,19 @@ def forgot_password_api(request):
     )
 
     try:
-    send_mail(
-        subject,
-        message,
-        settings.DEFAULT_FROM_EMAIL,
-        [user.email],
-        fail_silently=False,
-    )
-except Exception as e:
-    print("ERROR SMTP:", repr(e))
-    return Response(
-        {"error": "No se pudo enviar el correo de recuperación"},
-        status=500
-    )
+        send_mail(
+            subject,
+            message,
+            settings.DEFAULT_FROM_EMAIL,
+            [user.email],
+            fail_silently=False,
+        )
+    except Exception as e:
+        print("ERROR SMTP:", repr(e))
+        return Response(
+            {"error": "No se pudo enviar el correo de recuperación"},
+            status=500
+        )
 
     return Response(success_message, status=200)
 
