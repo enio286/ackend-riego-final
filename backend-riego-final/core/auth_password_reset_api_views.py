@@ -34,7 +34,6 @@ def forgot_password_api(request):
     token = token_generator.make_token(user)
 
     reset_link = f"{settings.FRONTEND_URL.rstrip('/')}/reset-password/{uid}/{token}"
-    print("RESET LINK LIMPIO:", reset_link)
 
     subject = "Recuperación de contraseña"
     message = (
@@ -53,8 +52,7 @@ def forgot_password_api(request):
             [user.email],
             fail_silently=False,
         )
-    except Exception as e:
-        print("ERROR MAIL:", repr(e))
+    except Exception:
         return Response(
             {"error": "No se pudo enviar el correo de recuperación"},
             status=500
