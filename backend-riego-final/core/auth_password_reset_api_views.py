@@ -34,7 +34,7 @@ def forgot_password_api(request):
     uid = urlsafe_base64_encode(force_bytes(user.pk))
     token = token_generator.make_token(user)
 
-    reset_link = f"{settings.FRONTEND_URL}/reset-password/{uid}/{token}"
+    reset_link = f"{settings.FRONTEND_URL.rstrip('/')}/reset-password/{uid}/{token}"
     print("RESET LINK LIMPIO:", reset_link)
 
     subject = "Recuperación de contraseña"
@@ -46,12 +46,19 @@ def forgot_password_api(request):
         f"Si no solicitaste este cambio, puedes ignorar este correo."
     )
 
+    stry:
     send_mail(
         subject,
         message,
         settings.DEFAULT_FROM_EMAIL,
         [user.email],
         fail_silently=False,
+    )
+except Exception as e:
+    print("ERROR SMTP:", repr(e))
+    return Response(
+        {"error": "No se pudo enviar el correo de recuperación"},
+        status=500
     )
 
     return Response(success_message, status=200)
