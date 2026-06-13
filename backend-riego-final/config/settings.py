@@ -169,6 +169,7 @@ MQTT_BROKER_HOST = os.getenv("MQTT_BROKER_HOST", "test.mosquitto.org")
 MQTT_BROKER_PORT = int(os.getenv("MQTT_BROKER_PORT", "1883"))
 MQTT_USERNAME = os.getenv("MQTT_USERNAME", "")
 MQTT_PASSWORD = os.getenv("MQTT_PASSWORD", "")
+MQTT_AUTO_START = os.getenv("MQTT_AUTO_START", "true").lower() in ("1", "true", "yes", "on")
 
 MQTT_TOPIC_TELEMETRIA = os.getenv(
     "MQTT_TOPIC_TELEMETRIA",

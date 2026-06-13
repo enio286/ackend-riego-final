@@ -1,5 +1,5 @@
 from django.urls import path
-from .mqtt_api_views import telemetria_latest_api, enviar_comando_mqtt_api
+from .mqtt_api_views import mqtt_status_api, telemetria_latest_api, enviar_comando_mqtt_api
 from .auth_password_reset_api_views import forgot_password_api, reset_password_api
 
 
@@ -121,6 +121,7 @@ urlpatterns = [
     path("auditorias/<int:id_auditoria>/", auditoria_detail_api, name="api_auditoria_detail"),
 
     # mtqq
+    path("iot/status/", mqtt_status_api, name="api_iot_status"),
     path("iot/telemetria/latest/", telemetria_latest_api, name="api_iot_telemetria_latest"),
     path("iot/comando/", enviar_comando_mqtt_api, name="api_iot_comando"),
 

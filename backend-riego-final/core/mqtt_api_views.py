@@ -3,7 +3,13 @@ from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.response import Response
 
 from core.models import TelemetriaESP32
-from core.mqtt_client import publish_command
+from core.mqtt_client import get_mqtt_status, publish_command
+
+
+@api_view(["GET"])
+@permission_classes([AllowAny])
+def mqtt_status_api(request):
+    return Response(get_mqtt_status())
 
 
 @api_view(["GET"])
@@ -13,7 +19,7 @@ def telemetria_latest_api(request):
 
     if not item:
         return Response({
-            "message": "No hay telemetría todavía"
+            "message": "No hay telemetria todavia"
         })
 
     return Response({
@@ -36,7 +42,7 @@ def enviar_comando_mqtt_api(request):
     accion = request.data.get("accion")
 
     if not accion:
-        return Response({"error": "La acción es obligatoria"}, status=400)
+        return Response({"error": "La accion es obligatoria"}, status=400)
 
     payload = {
         "accion": accion
