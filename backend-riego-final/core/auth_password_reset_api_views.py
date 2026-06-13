@@ -46,7 +46,7 @@ def forgot_password_api(request):
         f"Si no solicitaste este cambio, puedes ignorar este correo."
     )
 
-    stry:
+    try:
     send_mail(
         subject,
         message,
